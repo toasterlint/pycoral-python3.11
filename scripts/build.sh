@@ -18,7 +18,7 @@ set -ex
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly MAKEFILE="${SCRIPT_DIR}/../Makefile"
 readonly DOCKER_CPUS="${DOCKER_CPUS:=k8 aarch64 armv7a}"
-PYTHON_VERSIONS="36 37 38 39"
+PYTHON_VERSIONS="36 37 38 39 311"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -43,14 +43,25 @@ function docker_image {
     37) echo "debian:buster" ;;
     38) echo "ubuntu:20.04" ;;
     39) echo "debian:bullseye" ;;
+    311) echo "ubuntu:20.04" ;;
     *) echo "Unsupported python version: $1" 1>&2; exit 1 ;;
   esac
 }
 
 for python_version in ${PYTHON_VERSIONS}; do
-  make DOCKER_CPUS="${DOCKER_CPUS}" \
-       DOCKER_IMAGE=$(docker_image "${python_version}") \
-       DOCKER_TARGETS="pybind tflite wheel tflite-wheel" \
-       -f "${MAKEFILE}" \
-       docker-build
+  if [[ "${python_version}" == 311 ]]; then
+    make DOCKER_CPUS="${DOCKER_CPUS}" \
+         DOCKER_IMAGE=$(docker_image "${python_version}") \
+         DOCKER_TARGETS="pybind tflite wheel tflite-wheel" \
+         DOCKER_IMAGE_OPTIONS="-f Dockerfile-311" \
+         -f "${MAKEFILE}" \
+         docker-build
+  else
+    make DOCKER_CPUS="${DOCKER_CPUS}" \
+         DOCKER_IMAGE=$(docker_image "${python_version}") \
+         DOCKER_TARGETS="pybind tflite wheel tflite-wheel" \
+         PYTHON_VERSION="${python_version}" \
+         -f "${MAKEFILE}" \
+         docker-build
+  fi
 done

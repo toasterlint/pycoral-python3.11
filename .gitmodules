@@ -6,4 +6,4 @@
   url = https://github.com/google-coral/test_data
 [submodule "libcoral"]
   path = libcoral
-  url = https://github.com/google-coral/libcoral
+  url = https://github.com/toasterlint/libcoral-python3.11.git
